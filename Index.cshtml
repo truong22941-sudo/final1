@@ -1,202 +1,249 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <title>Final Exam</title>
+<meta charset="UTF-8">
+<title>Graph Visualization – Discrete Structure</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: "Times New Roman",Times,serif;
-            background: #f5f5f5;
-        }
-
-        header {
-            background: #c62828;
-            color: aliceblue;
-            text-align: center;
-            padding: 25px;
-            font-size: 26px;
-            font-weight: bold;
-        }
-
-        subheader {
-            display: block;
-            background: linear-gradient(to right,#99CCFF,#33CCFF,#99CCFF);
-            color: white;
-            text-align: center;
-            padding: 15px;
-            font-size: 18px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        }
-
-        .container {
-            margin: 20px;
-        }
-
-        main {
-            background: white;
-            padding: 15px;
-        }
-
-        aside {
-            background: #eee;
-            padding: 15px;
-        }
-
-        footer {
-            background: #c62828;
-            color: white;
-            text-align: center;
-            padding: 10px;
-        }
-    </style>
+<style>
+body {
+    margin: 0;
+    font-family: "Times New Roman", serif;
+    background: #f5f5f5;
+}
+header {
+    background: #c62828;
+    color: white;
+    text-align: center;
+    padding: 20px;
+    font-size: 26px;
+    font-weight: bold;
+}
+.container {
+    display: flex;
+    padding: 15px;
+}
+aside {
+    width: 30%;
+    background: #eee;
+    padding: 15px;
+}
+main {
+    width: 70%;
+    background: white;
+    padding: 15px;
+}
+canvas {
+    border: 1px solid black;
+}
+button {
+    margin: 4px 0;
+    width: 100%;
+}
+select, input {
+    width: 100%;
+    margin-bottom: 8px;
+}
+pre {
+    background: #fff;
+    padding: 10px;
+}
+</style>
 </head>
 
 <body>
 
-    <header>FINAL EXAM FOR DISCRETE STRUCTURE</header>
+<header>FINAL EXAM – DISCRETE STRUCTURE</header>
 
-    <subheader>
-        <p>Thành Viên Nhóm:</p>
-        <p>Trương Hoàng Đăng Khoa</p>
-        <p>Nguyễn Nhật Trường</p>
-        <p>Đặng Thái Lâm Đức</p>
-        <p>Trần Phạm Hoài Nam</p>
-        <p>Phạm Nguyễn Đức Thịnh</p>
-    </subheader>
+<div class="container">
+<aside>
+<h3>Controls</h3>
 
-    <div class="container">
-        <main>
-            <h2>Nội dung chính</h2>
-            <p>Chỗ này chèn nội dung</p>
-        </main>
+<button onclick="addNode()">Add Node</button>
+<button onclick="removeNode()">Remove Node</button>
 
-        <aside>
-            <h3>Sidebar</h3>
-            <p>Biểu đồ hoặc mô tả</p>
-        </aside>
-    </div>
+<button onclick="addEdge()">Add Edge</button>
+<button onclick="removeEdge()">Remove Edge</button>
 
-    <footer>
+<label>Weight</label>
+<input type="number" id="weight" value="1">
 
-        <canvas id="ab" width="1000" height="600"
-                style="border:1px solid #000;display:block;margin:20px auto;"></canvas>
+<label>Direction</label>
+<select id="direction">
+    <option value="u">Undirected</option>
+    <option value="d">Directed</option>
+</select>
 
-        <div style="text-align:center">
-            <button onclick="aa()">Thêm đỉnh</button>
-            <button onclick="ac()">Xóa đỉnh</button>
-            <button onclick="ae()">Thêm cạnh</button>
-            <button onclick="ag()">Xóa cạnh</button><br><br>
+<label>View Representation</label>
+<select onchange="updateView(this.value)">
+    <option value="list">Adjacency List</option>
+    <option value="matrix">Adjacency Matrix</option>
+    <option value="edge">Edge List</option>
+</select>
 
-            <label>Trọng số:</label>
-            <input type="number" id="ai" value="1" style="width:60px">
+<pre id="output">Empty</pre>
+</aside>
 
-            <label>Hướng:</label>
-            <select id="aj">
-                <option value="d">Có hướng</option>
-                <option value="u">Vô hướng</option>
-            </select>
-        </div>
+<main>
+<canvas id="canvas" width="900" height="500"></canvas>
+</main>
+</div>
 
-        <div style="width:80%;margin:auto;background:#fff;padding:15px">
-            <h3>Adjacency List</h3>
-<pre id="ak">Đang cập nhật...</pre>
-        </div>
+<script>
+let graph = {
+    nodes: [],
+    edges: []
+};
 
-        <script>
-            let al=[];
-            let am=[];
+let selectedNode = null;
+let tempEdgeStart = null;
+let draggingNode = null;
+let visited = new Set();
 
-            function aa(){
-                let an=al.length+1;
-                al.push({i:an,x:100+an*80,y:250});
-                az();
-            }
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
 
-            function ac(){
-                if(al.length>0){
-                    let ao=al.pop();
-                    am=am.filter(p=>p.f!==ao.i&&p.t!==ao.i);
-                    az();
-                }
-            }
+function addNode(){
+    let id = graph.nodes.length + 1;
+    graph.nodes.push({id, x:100+id*60, y:250});
+    draw();
+}
 
-            function ae(){
-                if(al.length>=2){
-                    let ap=parseInt(document.getElementById("ai").value);
-                    let aq=document.getElementById("aj").value;
-                    am.push({
-                        f:al[al.length-2].i,
-                        t:al[al.length-1].i,
-                        w:ap,
-                        d:aq
-                    });
-                    az();
-                }
-            }
+function removeNode(){
+    if(graph.nodes.length === 0) return alert("No node left");
+    let n = graph.nodes.pop();
+    graph.edges = graph.edges.filter(e=>e.from!==n.id && e.to!==n.id);
+    draw();
+}
 
-            function ag(){
-                if(am.length>0){
-                    am.pop();
-                    az();
-                }
-            }
+function addEdge(){
+    if(selectedNode === null) return alert("Select node first");
 
-            function az(){
-                let ar=document.getElementById("ab");
-                let as=ar.getContext("2d");
-                as.clearRect(0,0,ar.width,ar.height);
+    if(tempEdgeStart === null){
+        tempEdgeStart = selectedNode;
+        return;
+    }
 
-                am.forEach(e=>{
-                    let at=al.find(v=>v.i===e.f);
-                    let au=al.find(v=>v.i===e.t);
-                    if(at&&au){
-                        as.beginPath();
-                        as.moveTo(at.x,at.y);
-                        as.lineTo(au.x,au.y);
-                        as.stroke();
+    let w = parseInt(document.getElementById("weight").value);
+    let d = document.getElementById("direction").value;
 
-                        as.fillText(e.w,(at.x+au.x)/2,(at.y+au.y)/2);
+    graph.edges.push({
+        from: tempEdgeStart,
+        to: selectedNode,
+        weight: w,
+        directed: d
+    });
 
-                        if(e.d==="d"){
-                            let av=Math.atan2(au.y-at.y,au.x-at.x);
-                            let aw=au.x-10*Math.cos(av);
-                            let ax=au.y-10*Math.sin(av);
-                            as.beginPath();
-                            as.moveTo(aw,ax);
-                            as.lineTo(aw-5*Math.cos(av-Math.PI/6),ax-5*Math.sin(av-Math.PI/6));
-                            as.lineTo(aw-5*Math.cos(av+Math.PI/6),ax-5*Math.sin(av+Math.PI/6));
-                            as.fill();
-                        }
-                    }
-                });
+    tempEdgeStart = null;
+    draw();
+}
 
-                al.forEach(n=>{
-                    as.beginPath();
-                    as.arc(n.x,n.y,20,0,2*Math.PI);
-                    as.fillStyle="#4caf50";
-                    as.fill();
-                    as.stroke();
-                    as.fillStyle="white";
-                    as.fillText(n.i,n.x-5,n.y+5);
-                });
+function removeEdge(){
+    if(graph.edges.length === 0) return alert("No edge");
+    graph.edges.pop();
+    draw();
+}
 
-                let ay={};
-                al.forEach(n=>ay[n.i]=[]);
-                am.forEach(e=>{
-                    ay[e.f].push(e.t+"("+e.w+")");
-                    if(e.d==="u") ay[e.t].push(e.f+"("+e.w+")");
-                });
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-                let azz="";
-                for(let k in ay){
-                    azz+=k+": "+ay[k].join(", ")+"\n";
-                }
-                document.getElementById("ak").textContent=azz;
-            }
-        </script>
+    graph.edges.forEach(e=>{
+        let a = graph.nodes.find(n=>n.id===e.from);
+        let b = graph.nodes.find(n=>n.id===e.to);
+        if(!a||!b) return;
 
-    </footer>
+        ctx.beginPath();
+        ctx.moveTo(a.x,a.y);
+        ctx.lineTo(b.x,b.y);
+        ctx.stroke();
+
+        ctx.fillText(e.weight,(a.x+b.x)/2,(a.y+b.y)/2);
+
+        if(e.directed==="d"){
+            let ang = Math.atan2(b.y-a.y,b.x-a.x);
+            let x = b.x-10*Math.cos(ang);
+            let y = b.y-10*Math.sin(ang);
+            ctx.beginPath();
+            ctx.moveTo(x,y);
+            ctx.lineTo(x-5*Math.cos(ang-Math.PI/6),y-5*Math.sin(ang-Math.PI/6));
+            ctx.lineTo(x-5*Math.cos(ang+Math.PI/6),y-5*Math.sin(ang+Math.PI/6));
+            ctx.fill();
+        }
+    });
+
+    graph.nodes.forEach(n=>{
+        ctx.beginPath();
+        ctx.arc(n.x,n.y,20,0,2*Math.PI);
+        ctx.fillStyle = visited.has(n.id) ? "#ff9800" : "#4caf50";
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle="white";
+        ctx.fillText(n.id,n.x-5,n.y+5);
+    });
+
+    updateView(document.querySelector("select").value);
+}
+
+function adjacencyList(){
+    let a={};
+    graph.nodes.forEach(n=>a[n.id]=[]);
+    graph.edges.forEach(e=>{
+        a[e.from].push(e.to+"("+e.weight+")");
+        if(e.directed==="u")
+            a[e.to].push(e.from+"("+e.weight+")");
+    });
+    return Object.entries(a).map(([k,v])=>k+": "+v.join(", ")).join("\n");
+}
+
+function adjacencyMatrix(){
+    let n=graph.nodes.length;
+    let m=Array.from({length:n},()=>Array(n).fill(0));
+    graph.edges.forEach(e=>{
+        m[e.from-1][e.to-1]=e.weight;
+        if(e.directed==="u")
+            m[e.to-1][e.from-1]=e.weight;
+    });
+    return m.map(r=>r.join(" ")).join("\n");
+}
+
+function edgeList(){
+    return graph.edges.map(e=>`${e.from} -> ${e.to} (${e.weight})`).join("\n");
+}
+
+function updateView(type){
+    let out="";
+    if(type==="list") out=adjacencyList();
+    if(type==="matrix") out=adjacencyMatrix();
+    if(type==="edge") out=edgeList();
+    document.getElementById("output").textContent = out;
+}
+
+canvas.addEventListener("mousedown",e=>{
+    let r=canvas.getBoundingClientRect();
+    let x=e.clientX-r.left;
+    let y=e.clientY-r.top;
+
+    graph.nodes.forEach(n=>{
+        let dx=n.x-x, dy=n.y-y;
+        if(Math.sqrt(dx*dx+dy*dy)<=20){
+            draggingNode=n;
+            selectedNode=n.id;
+        }
+    });
+});
+
+canvas.addEventListener("mousemove",e=>{
+    if(draggingNode){
+        let r=canvas.getBoundingClientRect();
+        draggingNode.x=e.clientX-r.left;
+        draggingNode.y=e.clientY-r.top;
+        draw();
+    }
+});
+
+canvas.addEventListener("mouseup",()=>{
+    draggingNode=null;
+});
+</script>
+
 </body>
 </html>
